@@ -11,5 +11,9 @@
     "trumpet"
   ],
   "author": "bluntworks",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "through": "~2.3.4",
+    "trumpet": "~1.6.2"
+  }
 }
