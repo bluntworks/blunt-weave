@@ -1,0 +1,15 @@
+{
+  "name": "blunt-weave",
+  "version": "0.0.1",
+  "description": "Trumpet Templatinag",
+  "main": "weave.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "templating",
+    "trumpet"
+  ],
+  "author": "bluntworks",
+  "license": "MIT"
+}
