@@ -1,17 +1,28 @@
-var log = require('blunt-log')
-var weave = require('../weave.js')
+var log   = require('blunt-log')
+var Weave = require('../weave.js')
+var http  = require('http')
+var hmem  = require('./hmem.js')
+var req   = require('request')
+var fs    = require('fs')
+var trumpet = require('trumpet')
 
-var app = require('nym')()
-var stak = require('blunt-stack')
-var http = require('http')
+function basic(res) {
+  var f = fs.createReadStream(__dirname + '/index.html')
+  var tr = trumpet()
+  f.pipe(tr).pipe(res)
 
-app.static(__dirname)
+}
 
-http.createServer(stak(
-  conn.cookieParser,
-  conn.sessions
+function weaver(res) {
+  var weave = Weave(__dirname)
+  weave().pipe(res)
+}
 
-)).listen(3000, function() {
-  log('app listen: ', 3000)
+http.createServer(function(req, res) {
+
+  console.log('b4', hmem().str)
+  weaver(res)
+
+}).listen(8080, function() {
+  log('listening on', 8080)
 })
-

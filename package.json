@@ -1,6 +1,6 @@
 {
   "name": "blunt-weave",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Trumpet Templatinag",
   "main": "weave.js",
   "scripts": {
@@ -15,6 +15,11 @@
   "license": "MIT",
   "dependencies": {
     "through": "~2.3.4",
-    "trumpet": "~1.6.2"
+    "trumpet": "~1.6.2",
+    "blunt-log": "0.0.1",
+    "concat-stream": "~1.1.0"
+  },
+  "devDependencies": {
+    "request": "~2.27.0"
   }
 }

@@ -1,11 +1,12 @@
 var fs      = require('fs')
 var log     = require('blunt-log')
 var Tru     = require('through')
+var Cat     = require('concat-stream')
 var trumpet = require('trumpet')
 
 var Weave = function(file) {
   if(!(this instanceof Weave)) return new Weave(file)
-  file || (file ='index.html')
+  file || (file ='/index.html')
   this.outer = fs.createReadStream(this.root + file )
   this.partials = []
 }
@@ -13,13 +14,14 @@ var Weave = function(file) {
 var wp = Weave.prototype
 
 wp.render = function(file) {
-  var file = file || 'index.html'
+  var file = file || '/index.html'
   this.outer = fs.createReadStream(this.root + file)
   return this
 }
 
 wp.head = function(file, map) {
   this.partials.push({
+    type: 'append',
     selector: 'head',
     stream: fs.createReadStream(this.root + file),
     map: map
@@ -29,11 +31,32 @@ wp.head = function(file, map) {
 
 wp.append = function(sel, file, map) {
   var o = {
+    type: 'append',
     selector: sel,
     stream: fs.createReadStream(this.root + file),
     map: map
   }
   this.partials.push(o)
+  return this
+}
+
+
+wp.repeat = function(sel, snip, data) {
+  this.partials.push({
+    type: 'repeat',
+    selector: sel,
+    snippet: snip,
+    data: data
+  })
+  return  this
+}
+
+wp.html = function(sel, text) {
+  this.partials.push({
+    type: 'html',
+    selector: sel,
+    text: text
+  })
   return this
 }
 
@@ -49,24 +72,19 @@ wp.pipe = function(res) {
   var parts = this.partials
 
   parts.forEach(function(part) {
-    var el = tr.select(part.selector)
-    var es = el.createWriteStream()
-    var _map = part.map
-
-    if(_map) {
-      Object.keys(_map).forEach(function(k) {
-        var o = _map[k]
-        if('object' == typeof o) {
-          self.mapper(k, o, mtr)
-        } else {
-          var mel = mtr.select('.' + k)
-          var ms = mel.createWriteStream()
-          Str(_map[k]).pipe(ms)
-        }
-      })
+    switch(part.type) {
+      case 'append':
+        part
+          .stream
+          .pipe(self._append(tr, mtr, part))
+        break
+      case 'html':
+        self._html(tr, mtr, part)
+        break
+      case 'repeat':
+        self._repeat(tr, mtr, part)
+        break
     }
-
-    part.stream.pipe(es)
   })
 
   this.outer.pipe(tr)
@@ -81,6 +99,75 @@ wp.pipe = function(res) {
   })
 }
 
+wp._html = function(tr, mtr, part) {
+  var el = tr.select(part.selector)
+  var ws = el.createWriteStream()
+  ws.end(part.text)
+}
+
+wp._repeat = function(tr, mtr, part) {
+  var self = this
+
+  var sel  = part.selector
+  var data = part.data
+  var snip = part.snippet
+
+  var el = mtr.select(sel)
+  var es = el.createWriteStream()
+
+  //collect all the inrs
+  //and send them to the ws when finished
+  var cat = Cat(function(d) { es.end(d) })
+
+  var tru  = Tru()
+  tru.autoDestroy = false
+  tru.pipe(cat)
+
+  data.forEach(function(d) {
+    var inr  = trumpet()
+    var iel = inr.select('*')
+    var iws = iel.createWriteStream()
+
+    //inr.pipe(tru)
+    inr.on('data', function(_d) {
+      tru.write(_d)
+    })
+
+    Object.keys(d.attrs).forEach(function(k) {
+      iel.setAttribute(k, d.attrs[k])
+    })
+
+    iws.end(d.text)
+
+    inr.write(snip)
+  })
+
+  tru.end()
+}
+
+
+wp._append = function(tr, mtr, part) {
+  var self = this
+  var el = tr.select(part.selector)
+  var es = el.createWriteStream()
+  var _map = part.map
+
+  if(_map) {
+    Object.keys(_map).forEach(function(k) {
+      var o = _map[k]
+      if('object' == typeof o) {
+        self.mapper(k, o, mtr)
+      } else {
+        var mel = mtr.select('.' + k)
+        var ms = mel.createWriteStream()
+        ms.end(_map[k])
+      }
+    })
+  }
+
+  return es
+}
+
 wp.mapper = function(k, o, tr) {
   if(Array.isArray(o)) return
   var el = tr.select(k)
@@ -90,7 +177,7 @@ wp.mapper = function(k, o, tr) {
 
   if(v) {
     var es = el.createWriteStream()
-    Str(v).pipe(es)
+    es.end(v)
   }
 
   if(o.attrs) this.attrs(o.attrs, el)
@@ -106,17 +193,4 @@ wp.attrs = function(map, el) {
 module.exports = function(root) {
   Weave.prototype.root = root
   return Weave
-}
-
-var Str = function(s) {
-  if(!(this instanceof Str)) return new Str(s)
-  this.str = s
-}
-
-Str.prototype.pipe = function(dest) {
-  var tru = Tru()
-  tru.pipe(dest)
-  tru.write(this.str)
-  tru.end()
-  return dest
 }
