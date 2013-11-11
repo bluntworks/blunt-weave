@@ -1,6 +1,6 @@
 {
   "name": "blunt-weave",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Trumpet Templatinag",
   "main": "weave.js",
   "scripts": {
