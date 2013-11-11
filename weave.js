@@ -42,6 +42,8 @@ wp.append = function(sel, file, map) {
 
 
 wp.repeat = function(sel, snip, data) {
+  //bail early if no data
+  if(!data) return this
   this.partials.push({
     type: 'repeat',
     selector: sel,
