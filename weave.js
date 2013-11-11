@@ -60,6 +60,14 @@ wp.html = function(sel, text) {
   return this
 }
 
+wp.attr = function(sel, attrs) {
+  this.partials.push({
+    type: 'attrs',
+    selector: sel,
+    attrs: attrs
+  })
+  return this
+}
 wp.map = function(map) {
   this._map = map
   return this
@@ -84,6 +92,9 @@ wp.pipe = function(res) {
       case 'repeat':
         self._repeat(tr, mtr, part)
         break
+      case 'attrs':
+        self._attrs(tr, mtr, part)
+        break
     }
   })
 
@@ -96,6 +107,15 @@ wp.pipe = function(res) {
     parts = null
     self.outer = null
     res = null
+  })
+}
+
+wp._attrs = function(tr, mtr, part) {
+  var attrs = part.attrs
+  var el = mtr.select(part.selector)
+
+  Object.keys(attrs).forEach(function(ak) {
+    el.setAttribute(ak, attrs[ak])
   })
 }
 
