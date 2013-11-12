@@ -168,7 +168,7 @@ wp._loop = function(tr, mtr, part) {
   return Cat(function(html) { loop(html) })
 }
 
-wp._setAttr = function(el, attrs) {
+wp._setAttrs = function(el, attrs) {
   Object.keys(attrs).forEach(function(ak) {
     el.setAttribute(ak, attrs[ak])
   })
@@ -261,14 +261,14 @@ wp.mapper = function(k, o, tr) {
     es.end(v)
   }
 
-  if(o.attrs) this.attrs(o.attrs, el)
+  if(o.attrs) this._setAttrs(el, o.attrs)
 }
 
-wp.attrs = function(map, el) {
-  Object.keys(map).forEach(function(k) {
-    el.setAttribute(k, map[k])
-  })
-}
+// wp.attrs = function(map, el) {
+//   Object.keys(map).forEach(function(k) {
+//     el.setAttribute(k, map[k])
+//   })
+// }
 
 
 module.exports = function(root) {
