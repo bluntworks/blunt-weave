@@ -70,6 +70,18 @@ wp.attr = function(sel, attrs) {
   })
   return this
 }
+
+wp.loop = function(sel, file, maps) {
+  this.partials.push({
+    type: 'loop',
+    selector: sel,
+    file: file,
+    rs: fs.createReadStream(this.root + file),
+    maps: maps
+  })
+  return this
+}
+
 wp.map = function(map) {
   this._map = map
   return this
@@ -97,11 +109,15 @@ wp.pipe = function(res) {
       case 'attrs':
         self._attrs(tr, mtr, part)
         break
+      case 'loop':
+        part
+          .rs
+          .pipe(self._loop(tr, mtr, part))
+        break
     }
   })
 
   this.outer.pipe(tr)
-  var self = this
   tr.pipe(mtr).pipe(res)
   tr.on('end', function() {
     tr = null
@@ -112,13 +128,56 @@ wp.pipe = function(res) {
   })
 }
 
-wp._attrs = function(tr, mtr, part) {
-  var attrs = part.attrs
-  var el = mtr.select(part.selector)
+wp._loop = function(tr, mtr, part) {
+  var self = this
+  var maps = part.maps
+  var mel  = mtr.select(part.selector)
+  var ms   = mel.createWriteStream()
 
+  var cat = Cat(function(all) { ms.end(all) })
+
+  var tru = Tru()
+  tru.autoDestroy = false
+  tru.pipe(cat)
+
+  var len = part.maps.length
+  function loop(html) {
+    maps.forEach(function(map) {
+      var ftr = trumpet()
+
+      Object.keys(map).forEach(function(k) {
+        var it = map[k]
+        if('object' == typeof it) self.mapper(k, it, ftr)
+        else {
+          var fel = ftr.select(k)
+          var fs  = fel.createWriteStream()
+          fs.end(map[k])
+        }
+      })
+
+      ftr.on('end', function() {
+        if(len-- === 1) tru.end()
+      })
+
+      ftr.on('data', function(data) { tru.write(data)  })
+
+      ftr.end(html)
+    })
+  }
+
+  return Cat(function(html) { loop(html) })
+}
+
+wp._setAttr = function(el, attrs) {
   Object.keys(attrs).forEach(function(ak) {
     el.setAttribute(ak, attrs[ak])
   })
+}
+
+
+wp._attrs = function(tr, mtr, part) {
+  var el = mtr.select(part.selector)
+  this._setAttrs(el, part.attrs)
 }
 
 wp._html = function(tr, mtr, part) {
@@ -202,6 +261,7 @@ wp.mapper = function(k, o, tr) {
     es.end(v)
   }
 
+  log.err('mapper', k, o)
   if(o.attrs) this.attrs(o.attrs, el)
 }
 
