@@ -261,7 +261,6 @@ wp.mapper = function(k, o, tr) {
     es.end(v)
   }
 
-  log.err('mapper', k, o)
   if(o.attrs) this.attrs(o.attrs, el)
 }
 
