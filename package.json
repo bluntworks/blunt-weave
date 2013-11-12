@@ -1,7 +1,7 @@
 {
   "name": "blunt-weave",
-  "version": "0.0.4",
-  "description": "Trumpet Templatinag",
+  "version": "0.0.5",
+  "description": "Trumpet Wrapper",
   "main": "weave.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
