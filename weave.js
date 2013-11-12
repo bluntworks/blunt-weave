@@ -62,7 +62,7 @@ wp.html = function(sel, text) {
   return this
 }
 
-wp.attr = function(sel, attrs) {
+wp.attrs = function(sel, attrs) {
   this.partials.push({
     type: 'attrs',
     selector: sel,
