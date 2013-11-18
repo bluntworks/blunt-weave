@@ -264,13 +264,6 @@ wp.mapper = function(k, o, tr) {
   if(o.attrs) this._setAttrs(el, o.attrs)
 }
 
-// wp.attrs = function(map, el) {
-//   Object.keys(map).forEach(function(k) {
-//     el.setAttribute(k, map[k])
-//   })
-// }
-
-
 module.exports = function(root) {
   Weave.prototype.root = root
   return Weave
